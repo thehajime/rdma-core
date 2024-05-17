@@ -1198,12 +1198,14 @@ int rsocket(int domain, int type, int protocol)
 	struct rsocket *rs;
 	int index, ret;
 
+	printf("%s\n", __func__);
 	if ((domain != AF_INET && domain != AF_INET6 && domain != AF_IB) ||
 	    ((type != SOCK_STREAM) && (type != SOCK_DGRAM)) ||
 	    (type == SOCK_STREAM && protocol && protocol != IPPROTO_TCP) ||
 	    (type == SOCK_DGRAM && protocol && protocol != IPPROTO_UDP))
 		return ERR(ENOTSUP);
 
+	printf("%s go\n", __func__);
 	rs_configure();
 	rs = rs_alloc(NULL, type);
 	if (!rs)
@@ -3733,6 +3735,9 @@ int rsetsockopt(int socket, int level, int optname,
 		case TCP_MAXSEG:
 			ret = 0;
 			break;
+		case TCP_CONGESTION:
+			ret = 0;
+			break;
 		default:
 			break;
 		}
@@ -3895,6 +3900,9 @@ int rgetsockopt(int socket, int level, int optname,
 					    1 << (7 + rs->cm_id->route.path_rec->mtu) :
 					    2048;
 			*optlen = sizeof(int);
+			break;
+		case TCP_CONGESTION:
+			ret = 0;
 			break;
 		default:
 			ret = ENOTSUP;

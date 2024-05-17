@@ -47,6 +47,31 @@ install(TARGETS rspreload DESTINATION "${CMAKE_INSTALL_LIBDIR}/rsocket/")
 rdma_install_symlink("librspreload.so" "${CMAKE_INSTALL_LIBDIR}/rsocket/librspreload.so.1")
 rdma_install_symlink("librspreload.so" "${CMAKE_INSTALL_LIBDIR}/rsocket/librspreload.so.1.0.0")
 
+# ZPOLINE: The preload library is a bit special, it needs to be open coded
+# Since it is a LD_PRELOAD it has no soname, and is installed in sub dir
+
+set_source_files_properties(zpoline.c PROPERTIES COMPILE_FLAGS "-Wno-int-conversion -Wno-missing-prototypes -Wno-missing-declarations")
+
+add_library(rszpoline MODULE
+  zpoline.c
+  indexer.c
+  )
+# Even though this is a module we still want to use Wl,--no-undefined
+set_target_properties(rszpoline PROPERTIES LINK_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
+set_target_properties(rszpoline PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${BUILD_LIB}")
+#rdma_set_library_map(rszpoline librszpoline.map)
+target_link_libraries(rszpoline LINK_PRIVATE
+  rdmacm
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${CMAKE_DL_LIBS}
+)
+install(TARGETS rszpoline DESTINATION "${CMAKE_INSTALL_LIBDIR}/rsocket/")
+
+# These are for compat with old packaging, these name should not be used.
+# FIXME: Maybe we can get rid of them?
+rdma_install_symlink("librszpoline.so" "${CMAKE_INSTALL_LIBDIR}/rsocket/librszpoline.so.1")
+rdma_install_symlink("librszpoline.so" "${CMAKE_INSTALL_LIBDIR}/rsocket/librszpoline.so.1.0.0")
+
 if (ENABLE_STATIC)
   if (NOT NL_KIND EQUAL 0)
     set(REQUIRES "libnl-3.0, libnl-route-3.0, ")
